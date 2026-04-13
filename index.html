@@ -148,6 +148,29 @@ header p{font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:rgba
 .vis-read-btn{width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;font-size:11px;font-weight:500;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .12s;text-align:center}
 .vis-read-btn:hover{border-color:#639922;color:#3B6D11}
 .vis-read-btn.active{background:#639922;color:#fff;border-color:transparent}
+/* owner rating on visitor card */
+.owner-rating-badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px;margin-top:3px;align-self:flex-start;color:#fff}
+.owner-rating-badge.ra-1{background:#A32D2D}
+.owner-rating-badge.ra-2{background:#854F0B}
+.owner-rating-badge.ra-3{background:#3B6D11}
+.owner-rating-badge.ra-4{background:#185FA5}
+.owner-rating-badge.ra-5{background:#534AB7}
+/* guest collection */
+.card.col-selected{outline:2px solid #185FA5;outline-offset:-2px}
+.col-check-btn{width:100%;padding:5px;border:1px solid var(--border);border-radius:5px;background:transparent;cursor:pointer;font-size:10px;font-weight:600;color:var(--muted);font-family:'DM Sans',sans-serif;margin-bottom:3px;transition:all .12s;text-align:center}
+.col-check-btn:hover{border-color:#185FA5;color:#185FA5}
+.col-check-btn.col-check-on{background:#185FA5;color:#fff;border-color:transparent}
+/* guest collection panel */
+.col-book-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.col-book-row:last-child{border-bottom:none}
+.col-book-title{flex:1;font-weight:500}
+.col-book-meta{font-size:11px;color:var(--muted)}
+.col-book-rm{font-size:14px;border:none;background:none;cursor:pointer;color:#c0b8ae;padding:0 2px}
+.col-book-rm:hover{color:#e74c3c}
+.share-url-box{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;background:var(--surface2);color:var(--ink);cursor:text;margin-top:8px;word-break:break-all}
+.col-scan-zone{border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;font-size:12px;color:var(--muted);transition:border-color .2s;margin-bottom:8px}
+.col-scan-zone:hover{border-color:#185FA5}
+.col-scan-zone input{display:none}
 /* card footer */
 .card-footer{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
 .icon-btn{padding:3px 6px;border-radius:4px;font-size:11px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;line-height:1}
@@ -293,6 +316,48 @@ header p{font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:rgba
   </div>
 </div>
 
+<!-- Guest Collection Panel -->
+<div class="panel" id="col-panel">
+  <div class="panel-inner">
+    <h3>📋 My Collection <span id="col-count-badge" style="font-size:11px;font-weight:400;color:var(--muted)"></span></h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:11px">Build your personal reading list. Check books in the library using the <strong>+ My list</strong> button, or add your own below.</p>
+    <!-- Add own book to collection -->
+    <details style="margin-bottom:11px">
+      <summary style="font-size:12px;font-weight:500;cursor:pointer;color:#185FA5">+ Add a book not in this library</summary>
+      <div style="margin-top:9px">
+        <div class="col-scan-zone" onclick="document.getElementById('col-scan-file').click()">
+          📷 Scan book cover to auto-fill &nbsp;<span style="font-size:10px">(click)</span>
+          <input type="file" id="col-scan-file" accept="image/*" onchange="handleColScan(this)">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <input type="text" id="col-new-title" placeholder="Title *" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--card);color:var(--ink);outline:none">
+          <input type="text" id="col-new-author" placeholder="Author" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--card);color:var(--ink);outline:none">
+          <button class="btn btn-pri" onclick="addToGuestCollection()" style="align-self:flex-start">Add to my list</button>
+        </div>
+        <div id="col-scan-status" style="font-size:11px;color:var(--muted);min-height:14px;margin-top:4px"></div>
+      </div>
+    </details>
+    <!-- Book list -->
+    <div id="col-book-list" style="max-height:280px;overflow-y:auto;margin-bottom:11px"></div>
+    <!-- Share -->
+    <div id="col-share-section" style="display:none">
+      <div style="font-size:12px;font-weight:500;margin-bottom:4px">Share your collection</div>
+      <div class="form-actions" style="flex-wrap:wrap">
+        <button class="btn btn-pri" onclick="generateShareLink()">🔗 Generate share link</button>
+        <button class="btn" onclick="toggleCollectionMode(false)">Done</button>
+      </div>
+      <div id="col-share-url" style="display:none">
+        <div class="share-url-box" id="col-url-text"></div>
+        <button class="btn" onclick="copyShareLink()" style="margin-top:6px">📋 Copy link</button>
+      </div>
+    </div>
+    <div class="form-actions" id="col-actions-empty" style="display:none">
+      <p style="font-size:12px;color:var(--muted)">No books in your list yet. Check books using <strong>+ My list</strong> buttons above.</p>
+      <button class="btn" onclick="togglePanel('col-panel')">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="page">
   <div class="info" id="info"></div>
   <div class="legend" id="legend"></div>
@@ -303,6 +368,10 @@ header p{font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:rgba
 <script>
 /* ── Mode detection ── */
 const IS_OWNER=['localhost','127.0.0.1',''].includes(location.hostname);
+
+/* ── Baked state (populated by "Export for sharing") ── */
+const BAKED_ARCHIVED_IDS=new Set([]); // owner-archived book IDs, baked at export time
+let SHOW_OWNER_RATINGS=true;         // owner can toggle; baked at export time
 
 /* ── Constants ── */
 const CC={'Business & Management':['#E6F1FB','#185FA5'],'Marketing':['#EEEDFE','#3C3489'],'Economics':['#E1F5EE','#0F6E56'],'Entrepreneurship':['#FAECE7','#993C1D'],'Leadership':['#FAEEDA','#633806'],'Self-Help & Productivity':['#FAEEDA','#854F0B'],'Psychology':['#EEEDFE','#534AB7'],'Design':['#E1F5EE','#1D9E75'],'Creativity & Writing':['#FAECE7','#D85A30'],'Parenting & Education':['#EAF3DE','#3B6D11'],'Career & Language':['#F1EFE8','#5F5E5A'],'Investing & Finance':['#EAF3DE','#27500A'],'Science & Health':['#E6F1FB','#0C447C'],'Technology':['#E1F5EE','#085041'],'History & Politics':['#FAEEDA','#412402'],'Philosophy & Spirituality':['#EEEDFE','#26215C'],'Fiction':['#FBEAF0','#72243E'],'Humor & Comics':['#FAEEDA','#633806'],"Children's Fiction":['#FAECE7','#712B13'],'Biography':['#F1EFE8','#2C2C2A'],'Reference':['#F1EFE8','#444441']};
@@ -567,6 +636,11 @@ const BASE_BOOKS=[
 /* ── State ── */
 let userData={},coverCache={},customBooks=[];
 let visitorName='',visitorRead={},visitorRating={};
+/* guest collection */
+let guestCollectionIds=new Set(); // IDs selected from library
+let guestCustomBooks=[];          // books guest added themselves
+let guestNextId=5000;
+let inCollectionMode=false;       // show checkboxes mode
 let excludedCats=new Set();
 let activeCat='',search='',stFilter='',typeFilter='',sortBy='rating';
 let showArchived=false,nextId=200;
@@ -595,6 +669,9 @@ function loadLS(){
   try{const d=localStorage.getItem('vis_name');if(d)visitorName=d;}catch(e){}
   try{const d=localStorage.getItem('vis_read');if(d)visitorRead=JSON.parse(d);}catch(e){}
   try{const d=localStorage.getItem('vis_rating');if(d)visitorRating=JSON.parse(d);}catch(e){}
+  /* guest collection */
+  try{const d=localStorage.getItem('guest_col_ids');if(d)guestCollectionIds=new Set(JSON.parse(d));}catch(e){}
+  try{const d=localStorage.getItem('guest_col_custom');if(d){guestCustomBooks=JSON.parse(d);if(guestCustomBooks.length)guestNextId=Math.max(...guestCustomBooks.map(b=>b.id))+1;}}catch(e){}
 }
 let saveTm=null;
 function saveUD(){clearTimeout(saveTm);saveTm=setTimeout(()=>{try{localStorage.setItem('lib_ud',JSON.stringify(userData));}catch(e){}},500);}
@@ -606,6 +683,10 @@ function saveVis(){
   try{localStorage.setItem('vis_name',visitorName);}catch(e){}
   try{localStorage.setItem('vis_read',JSON.stringify(visitorRead));}catch(e){}
   try{localStorage.setItem('vis_rating',JSON.stringify(visitorRating));}catch(e){}
+}
+function saveGuestCol(){
+  try{localStorage.setItem('guest_col_ids',JSON.stringify([...guestCollectionIds]));}catch(e){}
+  try{localStorage.setItem('guest_col_custom',JSON.stringify(guestCustomBooks));}catch(e){}
 }
 
 /* ── Cover fetching ─────────────────────────────────────────────────────
@@ -715,7 +796,10 @@ function refreshCover(id){
 }
 
 /* ── Helpers ── */
-function isArchived(id){return!!userData[id]?.archived;}
+function isArchived(id){
+  if(IS_OWNER)return!!userData[id]?.archived;
+  return BAKED_ARCHIVED_IDS.has(id)||!!userData[id]?.archived;
+}
 function isLent(id){return!!(userData[id]?.lentTo);}
 
 function getFiltered(){
@@ -820,9 +904,13 @@ function renderVisitorCard(b){
   const cv=coverCache[b.id];
   const vRead=!!visitorRead[b.id];
   const vRat=visitorRating[b.id]||null;
+  const ownerRat=SHOW_OWNER_RATINGS?(ud.rating||null):null;
+  const inCol=guestCollectionIds.has(b.id);
   const card=document.createElement('div');
-  card.className='card';card.dataset.id=b.id;
+  card.className='card'+(inCol&&inCollectionMode?' col-selected':'');card.dataset.id=b.id;
   const rtBtns=[1,2,3,4,5].map(r=>`<button class="bg-btn${vRat===r?' ra-'+r:''}" data-vrt-id="${b.id}" data-r="${r}" title="${r}—${RL[r]}">${RT_LBL[r]}</button>`).join('');
+  const ownerRatingHTML=ownerRat?`<div class="owner-rating-badge ra-${ownerRat}" title="Owner rated ${RL[ownerRat]}">Owner: ${RL[ownerRat]}</div>`:'';
+  const colCheckHTML=inCollectionMode?`<button class="col-check-btn${inCol?' col-check-on':''}" data-col-id="${b.id}">${inCol?'✓ In my list':'+ My list'}</button>`:'';
   card.innerHTML=`
     <div class="cover-wrap" style="background:${cbg}">
       <img class="cover-img" src="${cv||''}" style="opacity:${cv?'1':'0'}" alt="${dispTitle.replace(/"/g,'&quot;')}" loading="lazy">
@@ -839,8 +927,10 @@ function renderVisitorCard(b){
       <span class="cat-badge" style="background:${cbg};color:${cfg}">${dispCat}</span>
       <div class="book-title">${dispTitle}</div>
       <div class="book-author"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dispAuth}</span></div>
+      ${ownerRatingHTML}
     </div>
     <div class="cactions">
+      ${colCheckHTML}
       <button class="vis-read-btn${vRead?' active':''}" data-vread-id="${b.id}">${vRead?'✓ I\'ve read this':'Mark as read'}</button>
       <div><div class="action-label">Your rating</div><div class="btn-group">${rtBtns}</div></div>
     </div>`;
@@ -1005,6 +1095,19 @@ document.getElementById('grid').addEventListener('click',e=>{
     if(vr){const id=+vr.dataset.vreadId;visitorRead[id]=!visitorRead[id];saveVis();vr.className='vis-read-btn'+(visitorRead[id]?' active':'');vr.textContent=visitorRead[id]?'✓ I\'ve read this':'Mark as read';const cw=document.querySelector(`.card[data-id="${id}"] .cover-wrap`);if(cw){let badge=cw.querySelector('.vis-read-badge');if(!badge){badge=document.createElement('div');badge.className='vis-read-badge';badge.textContent='✓ Read by you';cw.appendChild(badge);}badge.style.display=visitorRead[id]?'block':'none';}updateStats();return;}
     const vrt=e.target.closest('[data-vrt-id]');
     if(vrt){const id=+vrt.dataset.vrtId,r=+vrt.dataset.r;visitorRating[id]=visitorRating[id]===r?null:r;saveVis();const card=document.querySelector(`.card[data-id="${id}"]`);if(card){const nr=visitorRating[id];card.querySelectorAll('[data-vrt-id]').forEach(b=>{b.className='bg-btn'+(+b.dataset.r===nr?' ra-'+nr:'');});}updateStats();return;}
+    /* guest collection toggle */
+    const cb=e.target.closest('[data-col-id]');
+    if(cb){
+      const id=+cb.dataset.colId;
+      if(guestCollectionIds.has(id)){guestCollectionIds.delete(id);}else{guestCollectionIds.add(id);}
+      saveGuestCol();
+      cb.className='col-check-btn'+(guestCollectionIds.has(id)?' col-check-on':'');
+      cb.textContent=guestCollectionIds.has(id)?'✓ In my list':'+ My list';
+      const card=cb.closest('.card');
+      if(card)card.classList.toggle('col-selected',guestCollectionIds.has(id)&&inCollectionMode);
+      updateColBadge();
+      return;
+    }
   }
 });
 
@@ -1029,7 +1132,9 @@ function buildOwnerUI(){
     <button class="btn" onclick="togglePanel('lent-panel')">📤 Lent</button>
     <button class="btn" onclick="openCatPanel()">🔖 Categories</button>
     <button class="btn" onclick="openRecPanel()">✨ Recommend</button>
+    <button class="btn" id="ratings-vis-btn" onclick="toggleOwnerRatings()" title="Toggle whether guests see your ratings">👁 Ratings: ON</button>
     <button class="btn btn-pri" onclick="togglePanel('add-panel')">+ Add</button>
+    <button class="btn" onclick="exportForSharing()">📤 Export for sharing</button>
     <button class="btn" onclick="downloadCSV()">↓ CSV</button>`;
   document.getElementById('legend').innerHTML=`
     <strong>Rating:</strong>
@@ -1038,16 +1143,20 @@ function buildOwnerUI(){
     <span><span class="lsq" style="background:#3B6D11"></span>3 OK</span>
     <span><span class="lsq" style="background:#185FA5"></span>4 Meh</span>
     <span><span class="lsq" style="background:#534AB7"></span>5 Hated</span>
-    <span style="color:#b0a898;font-size:10px;margin-left:8px">Click category badge to change · Hover cover → ↺ refresh</span>`;
+    <span style="color:#b0a898;font-size:10px;margin-left:8px">Click category badge to change · Hover cover → ↺ refresh · 📤 Export for sharing bakes current archive state into the HTML</span>`;
 }
-
 /* ── Visitor UI ── */
 function buildVisitorUI(){
   document.getElementById('site-title').innerHTML='A <span>Library</span>';
   document.getElementById('vis-banner').style.display='block';
-  document.getElementById('owner-btns').innerHTML=`<button class="btn" onclick="openCatPanel()">🔖 Filter categories</button><button class="btn" onclick="openRecPanel()">✨ Recommend</button>`;
+  document.getElementById('owner-btns').innerHTML=`
+    <button class="btn" onclick="openCatPanel()">🔖 Filter</button>
+    <button class="btn" onclick="openRecPanel()">✨ Recommend</button>
+    <button class="btn" id="col-mode-btn" onclick="toggleCollectionMode(true)">📋 My list</button>`;
   renderVisitorBanner();
-  document.getElementById('legend').innerHTML=`<span style="color:var(--muted);font-size:11px">Hover a cover and click ↺ to refresh its image. Mark books you've read and rate them below.</span>`;
+  document.getElementById('legend').innerHTML=`<span style="color:var(--muted);font-size:11px">Hover a cover → ↺ refresh · Click <strong>📋 My list</strong> to build your own collection and share it</span>`;
+  /* check for shared collection in URL hash */
+  loadSharedCollection();
 }
 function renderVisitorBanner(){
   const vi=document.getElementById('vis-inner');
@@ -1064,12 +1173,14 @@ function changeVisitorName(){visitorName='';renderVisitorBanner();setTimeout(()=
 /* ── Shared panels ── */
 function openCatPanel(){buildCatExcludePanel();togglePanel('cat-panel');}
 function openRecPanel(){buildRecCatPanel();togglePanel('rec-panel');}
+function openColPanel(){updateColPanel();togglePanel('col-panel');}
 function togglePanel(id){
   const p=document.getElementById(id);const open=p.style.display!=='block';
-  ['add-panel','lent-panel','cat-panel','rec-panel'].forEach(x=>document.getElementById(x).style.display='none');
+  ['add-panel','lent-panel','cat-panel','rec-panel','col-panel'].forEach(x=>document.getElementById(x).style.display='none');
   if(open)p.style.display='block';
   if(id==='add-panel'&&open)document.getElementById('new-title').focus();
   if(id==='lent-panel'&&open)renderLentPanel();
+  if(id==='col-panel'&&open)updateColPanel();
 }
 function toggleShowArchived(){showArchived=!showArchived;const btn=document.getElementById('arch-btn');if(btn)btn.className='btn'+(showArchived?' btn-active':'');render();}
 
@@ -1458,6 +1569,179 @@ async function getRecommendations(){
   });
 
   btn.disabled=false;
+}
+
+/* ── Owner ratings toggle ── */
+function toggleOwnerRatings(){
+  SHOW_OWNER_RATINGS=!SHOW_OWNER_RATINGS;
+  const btn=document.getElementById('ratings-vis-btn');
+  if(btn)btn.textContent=`👁 Ratings: ${SHOW_OWNER_RATINGS?'ON':'OFF'}`;
+  render();
+}
+
+/* ── Export for sharing ── */
+function exportForSharing(){
+  /* Collect current archived IDs from localStorage userData */
+  const archivedIds=Object.entries(userData)
+    .filter(([,v])=>v.archived).map(([k])=>+k);
+  /* Get current page HTML and inject baked values */
+  let html=document.documentElement.outerHTML;
+  /* Replace the BAKED_ARCHIVED_IDS placeholder */
+  html=html.replace(
+    /const BAKED_ARCHIVED_IDS=new Set\(\[.*?\]\);/,
+    `const BAKED_ARCHIVED_IDS=new Set([${archivedIds.join(',')}]);`
+  );
+  /* Bake SHOW_OWNER_RATINGS */
+  html=html.replace(
+    /let SHOW_OWNER_RATINGS=\w+;/,
+    `let SHOW_OWNER_RATINGS=${SHOW_OWNER_RATINGS};`
+  );
+  const blob=new Blob([html],{type:'text/html;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='my-library-shared.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  alert(`Exported! ${archivedIds.length} archived book${archivedIds.length!==1?'s are':' is'} hidden in the shared version. Upload my-library-shared.html to your hosting.`);
+}
+
+/* ── Guest collection mode ── */
+function toggleCollectionMode(on){
+  inCollectionMode=on;
+  const btn=document.getElementById('col-mode-btn');
+  if(btn)btn.className='btn'+(on?' btn-active':'');
+  render();
+  if(on)openColPanel();
+  else togglePanel(''); /* close all panels */
+}
+
+function updateColBadge(){
+  const total=guestCollectionIds.size+guestCustomBooks.length;
+  const badge=document.getElementById('col-count-badge');
+  const modeBtn=document.getElementById('col-mode-btn');
+  if(badge)badge.textContent=total?`(${total} books)`:'';
+  if(modeBtn)modeBtn.textContent=total?`📋 My list (${total})`:'📋 My list';
+}
+
+function updateColPanel(){
+  updateColBadge();
+  const list=document.getElementById('col-book-list');
+  const shareSection=document.getElementById('col-share-section');
+  const emptySection=document.getElementById('col-actions-empty');
+  if(!list)return;
+  const allSelected=[
+    ...[...guestCollectionIds].map(id=>{
+      const b=getAllBooks().find(x=>x.id===id);
+      return b?{id,title:getTitle(b),author:getAuthor(b),custom:false}:null;
+    }).filter(Boolean),
+    ...guestCustomBooks.map(b=>({id:b.id,title:b.title,author:b.author,custom:true}))
+  ];
+  list.innerHTML='';
+  if(!allSelected.length){
+    shareSection.style.display='none';
+    emptySection.style.display='block';
+    return;
+  }
+  emptySection.style.display='none';
+  shareSection.style.display='block';
+  document.getElementById('col-share-url').style.display='none';
+  allSelected.forEach(item=>{
+    const row=document.createElement('div');row.className='col-book-row';
+    row.innerHTML=`<div class="col-book-title">${item.title}</div><div class="col-book-meta">${item.author}</div><button class="col-book-rm" data-rm-col-id="${item.id}" data-rm-custom="${item.custom}" title="Remove">×</button>`;
+    list.appendChild(row);
+  });
+  list.addEventListener('click',e=>{
+    const rb=e.target.closest('[data-rm-col-id]');
+    if(!rb)return;
+    const id=+rb.dataset.rmColId;
+    if(rb.dataset.rmCustom==='true'){
+      guestCustomBooks=guestCustomBooks.filter(b=>b.id!==id);
+    } else {
+      guestCollectionIds.delete(id);
+    }
+    saveGuestCol();render();updateColPanel();
+  },{once:true});
+}
+
+/* Add guest's own book to collection */
+function addToGuestCollection(){
+  const title=document.getElementById('col-new-title').value.trim();
+  if(!title){document.getElementById('col-new-title').style.borderColor='#e74c3c';return;}
+  document.getElementById('col-new-title').style.borderColor='';
+  const author=document.getElementById('col-new-author').value.trim()||'Unknown';
+  const id=guestNextId++;
+  guestCustomBooks.push({id,title,author});
+  saveGuestCol();
+  document.getElementById('col-new-title').value='';
+  document.getElementById('col-new-author').value='';
+  document.getElementById('col-scan-status').textContent='';
+  updateColPanel();updateColBadge();
+  /* fetch cover for newly added guest book */
+  requestAnimationFrame(()=>{
+    const idx=coverQ.findIndex(x=>x.id===id);if(idx>=0)coverQ.splice(idx,1);
+    coverQ.unshift({id,title,author,attempt:0});drainQueue();
+  });
+}
+
+/* Scan for guest collection add */
+async function handleColScan(input){
+  const file=input.files[0];if(!file)return;
+  const se=document.getElementById('col-scan-status');
+  se.innerHTML='<span class="spinner"></span> Analysing…';
+  try{
+    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=rej;fr.readAsDataURL(file);});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},{type:'text',text:'Book cover. Return ONLY JSON: {title,author}. No markdown.'}]}]})});
+    const data=await resp.json();
+    const parsed=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
+    if(parsed.title)document.getElementById('col-new-title').value=parsed.title;
+    if(parsed.author)document.getElementById('col-new-author').value=parsed.author;
+    se.textContent=parsed.title?`✓ "${parsed.title}". Review and click Add.`:'Could not parse — fill manually.';
+  }catch(e){se.textContent='Could not parse — fill manually.';}
+}
+
+/* Generate shareable URL with collection encoded in hash */
+function generateShareLink(){
+  const col={
+    name:visitorName||'A friend',
+    ids:[...guestCollectionIds],
+    custom:guestCustomBooks.map(b=>({title:b.title,author:b.author}))
+  };
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(col))));
+  const url=location.origin+location.pathname+'#col='+encoded;
+  const box=document.getElementById('col-url-text');
+  const wrap=document.getElementById('col-share-url');
+  if(box)box.textContent=url;
+  if(wrap)wrap.style.display='block';
+}
+function copyShareLink(){
+  const url=document.getElementById('col-url-text')?.textContent;
+  if(!url)return;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.querySelector('[onclick="copyShareLink()"]');
+    if(btn){const orig=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=orig,2000);}
+  }).catch(()=>alert('Copy: '+url));
+}
+
+/* Load a shared collection from URL hash */
+function loadSharedCollection(){
+  const hash=location.hash;
+  if(!hash.startsWith('#col='))return;
+  try{
+    const col=JSON.parse(decodeURIComponent(escape(atob(hash.slice(5)))));
+    if(!col.ids&&!col.custom)return;
+    /* Show a "viewing X's collection" banner */
+    const banner=document.createElement('div');
+    banner.style.cssText='background:#e8f0fe;border-bottom:1px solid #a8c4f5;padding:9px 18px;font-size:13px;color:#185FA5;text-align:center';
+    banner.innerHTML=`📋 You're viewing <strong>${col.name||'a friend'}'s collection</strong> (${(col.ids||[]).length+(col.custom||[]).length} books) · <a href="${location.origin+location.pathname}" style="color:#185FA5">See full library</a>`;
+    document.body.insertBefore(banner,document.querySelector('.page'));
+    /* Filter to only show collection books */
+    const collectionIdSet=new Set(col.ids||[]);
+    const origGetFiltered=getFiltered;
+    window.getFiltered=function(){
+      let b=getAllBooks().filter(x=>collectionIdSet.has(x.id)&&!isArchived(x.id));
+      const customShared=(col.custom||[]).map((c,i)=>({id:9000+i,title:c.title,author:c.author,cat:'Reference',_shared:true}));
+      b=[...b,...customShared];
+      return b;
+    };
+  }catch(e){}
 }
 
 /* ── Download CSV ── */
